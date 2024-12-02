@@ -860,7 +860,7 @@ static struct sk_buff *j1939_sk_alloc_skb(struct net_device *ndev,
 	struct j1939_sk_buff_cb *skcb;
 	struct sk_buff *skb;
 	int ret;
-	printk(KERN_ERR "russell------------j1939_sk_alloc_skb:\n");
+	// printk(KERN_ERR "russell------------j1939_sk_alloc_skb:\n");
 	skb = sock_alloc_send_skb(sk,
 				  size +
 				  sizeof(struct can_frame) -
@@ -1160,6 +1160,7 @@ void j1939_sk_send_loop_abort(struct sock *sk, int err)
 
 	sk_error_report(sk);
 }
+#define CAN1_IF_INDEX_IS 5
 //russell:在这里是发送入口
 static int j1939_sk_send_loop(struct j1939_priv *priv,  struct sock *sk,
 			      struct msghdr *msg, size_t size)
@@ -1170,16 +1171,16 @@ static int j1939_sk_send_loop(struct j1939_priv *priv,  struct sock *sk,
 	struct sk_buff *skb;
 	size_t segment_size, todo_size;
 	int ret = 0;
-
 	int can_name = 0;//russell:设置can fd name为0；传统can—j1939 canName为1；
-	if (msg->msg_name) {
-		struct sockaddr_can *addr = msg->msg_name;
-		printk(KERN_ERR "russell------ msg_name:%d\n",addr->can_addr.j1939.name);
-		can_name = addr->can_addr.j1939.name;
-		addr->can_addr.j1939.name = 0;
-	}
+
+	struct sockaddr_can *addr = (struct sockaddr_can *)msg->msg_name;
+
+	if (addr->can_ifindex == CAN1_IF_INDEX_IS)
+		can_name = 1;
+	// printk(KERN_ERR "russell------ addr->can_ifindex:%d\n",addr->can_ifindex);
+
 	// printk(KERN_ERR "russell-j1939_sk_send_loop-----------\n");
-	printk(KERN_ERR "russell------------size:%d\n",size);
+	// printk(KERN_ERR "russell------------size:%d\n",size);
 
 	if (session &&
 	    session->total_message_size != session->total_queued_size + size) {
